@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.png" alt="VGBA-EMU Logo" width="200"/>
+<img src="https://raw.githubusercontent.com/TS-DEV-DEBUG-V2/vgba-emu/main/assets/gba.webp" alt="VGBA-EMU Logo" width="200"/>
 
 # VGBA-EMU
 
