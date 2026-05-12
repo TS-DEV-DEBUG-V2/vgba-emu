@@ -89,8 +89,8 @@ VGBA-EMU is a high-performance Nintendo Game Boy Advance emulator written entire
 | B | Z |
 | Start | Enter |
 | Select | Backspace |
-| L | A |
-| R | S |
+| L | N |
+| R | M |
 | D-Pad | Arrow Keys |
 
 ## Building from Source
@@ -104,12 +104,12 @@ make
 To build the WebAssembly target with Emscripten:
 
 ```bash
-emmake make
+make web
 ```
 
 ## Usage
 
-Open `index.html` in a browser, select a game from the menu or drag and drop your own `.gba` ROM file onto the canvas.
+Open `web/vba-emu.html` in a browser (via localhost server) , select a game from the menu or drag and drop your own `.gba` ROM file onto the canvas.
 
 ## Development
 
@@ -127,6 +127,6 @@ See [`LICENSE`](https://github.com/TS-DEV-DEBUG-V2/vgba-emu/blob/main/LICENSE) f
 
 <div align="center">
 
-Made with 💜 by [TS-DEV-DEBUG-V2](https://github.com/TS-DEV-DEBUG-V2)
+VGBA-EMU © 2026 TS-DEV-DEBUG-V2 ALL RIGHTS RESERVED.
 
 </div>
