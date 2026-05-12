@@ -61,7 +61,7 @@
 
 **Play GBA games directly in your browser — no plugins, no installs, no compromise.**
 
-[▶ Play Now](https://ts-dev-debug-v2.github.io/vgba-emu) · [Report Bug](https://github.com/TS-DEV-DEBUG-V2/vgba-emu/issues) · [Request Feature](https://github.com/TS-DEV-DEBUG-V2/vgba-emu/issues)
+[Play Now](https://ts-dev-debug-v2.github.io/vgba-emu/web/vgba-emu.html) · [Report Bug](https://github.com/TS-DEV-DEBUG-V2/vgba-emu/issues) · [Request Feature](https://github.com/TS-DEV-DEBUG-V2/vgba-emu/issues)
 
 </div>
 
@@ -69,7 +69,7 @@
 
 ## About
 
-VGBA-EMU is a high-performance Nintendo Game Boy Advance emulator written entirely in C and compiled to WebAssembly via Emscripten. It runs GBA ROMs directly in the browser with accurate ARM7TDMI CPU emulation, PPU rendering, and audio output through the Web Audio API.
+VGBA-EMU is a high-performance Nintendo Game Boy Advance emulator written entirely in C and compiled to WebAssembly via Emscripten, and windows !
 
 ## Features
 
@@ -77,9 +77,6 @@ VGBA-EMU is a high-performance Nintendo Game Boy Advance emulator written entire
 - **Browser-native** — compiled to WebAssembly, runs on any modern browser
 - **Drag & drop ROMs** — drop a `.gba` file onto the screen to play instantly
 - **Keyboard controls** — full GBA button mapping out of the box
-- **Save state support** — persist your progress via IndexedDB
-- **Pixel-perfect rendering** — integer-scaled with `image-rendering: pixelated`
-- **Cross-platform** — Chrome, Firefox, Safari, Edge on desktop and mobile
 
 ## Controls
 
