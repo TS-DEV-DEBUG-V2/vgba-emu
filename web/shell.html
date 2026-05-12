@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>vgba-emu</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; background:#0a0a0f; color:#eee; font-family:'Segoe UI',system-ui,sans-serif; overflow:hidden; }
+  body { display:flex; flex-direction:column; align-items:center; padding:8px; }
+  h2 { font-size:14px; color:#555; margin:4px 0; letter-spacing:2px; text-transform:uppercase; }
+  #controls-info { color:#444; font-size:11px; margin-bottom:6px; }
+  #game-selector { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:6px; }
+  #game-selector button {
+    background:#1a1a2e; border:1px solid #2a2a3e; color:#aaa; padding:6px 14px;
+    border-radius:4px; cursor:pointer; font-size:12px; transition:all .15s;
+  }
+  #game-selector button:hover { background:#2a2a4e; color:#fff; border-color:#4a4a6e; }
+  #game-selector button.active { background:#2e1a4e; border-color:#7b3fe4; color:#d4b8ff; }
+  #canvas-wrap { flex:1; display:flex; align-items:center; justify-content:center; width:100%; min-height:0; }
+  canvas#canvas {
+    background:#000; display:block; image-rendering:pixelated;
+    max-width:min(95vw, 960px); max-height:min(80vh, 640px);
+    width:100%; aspect-ratio:3/2; border-radius:4px;
+    box-shadow:0 0 40px rgba(80,40,160,.15);
+  }
+  #status { color:#555; font-size:11px; margin-top:4px; }
+  #log { color:#444; font-size:10px; white-space:pre; text-align:left; max-width:720px; width:100%; max-height:80px; overflow:auto; margin-top:4px; }
+  #canvas-wrap.dragover canvas { box-shadow:0 0 60px rgba(123,63,228,.5); }
+  #drop-hint { color:#666; font-size:11px; margin-top:2px; }
+</style>
+</head>
+<body>
+<h2>vgba-emu</h2>
+<button
+  onclick="window.open('https://github.com/TS-DEV-DEBUG-V2/vgba-emu', '_blank')"
+  style="
+    background: linear-gradient(135deg, #7c3aed, #a855f7);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(124, 58, 237, 0.35);
+    transition: all 0.2s ease;
+  "
+  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 24px rgba(124,58,237,0.45)'"
+  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 18px rgba(124,58,237,0.35)'"
+>
+  View Source Code
+</button>
+<p id="controls-info">Controls: X=A, Z=B, Enter=Start, Backspace=Select, S=R, A=L, Arrows=D-pad</p>
+<div id="game-selector"></div>
+<div id="status">my favs:</div>
+<div id="canvas-wrap">
+  <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+</div>
+<div id="log"></div>
+<p id="drop-hint">also btw you can drag your own roms here</p>
+<script>
+var DROPPED_KEY = '__dropped__.gba';
+
+function openDropDB() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open('vgba-drop', 1);
+    req.onupgradeneeded = function() { req.result.createObjectStore('roms'); };
+    req.onsuccess = function() { resolve(req.result); };
+    req.onerror = function() { reject(req.error); };
+  });
+}
+
+function storeDroppedRom(arrayBuffer) {
+  return openDropDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('roms', 'readwrite');
+      tx.objectStore('roms').put(arrayBuffer, 'dropped');
+      tx.oncomplete = function() { resolve(); };
+      tx.onerror = function() { reject(tx.error); };
+    });
+  });
+}
+
+function loadDroppedRom() {
+  return openDropDB().then(function(db) {
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction('roms', 'readonly');
+      var req = tx.objectStore('roms').get('dropped');
+      req.onsuccess = function() { resolve(req.result || null); };
+      req.onerror = function() { reject(req.error); };
+    });
+  });
+}
+
+var _origFetch = window.fetch;
+window.fetch = function(input, init) {
+  var url = (typeof input === 'string') ? input : input.url;
+  if (url === DROPPED_KEY || url.endsWith('/' + DROPPED_KEY)) {
+    return loadDroppedRom().then(function(buf) {
+      if (!buf) return _origFetch(input, init);
+      return new Response(buf, {
+        status: 200,
+        headers: { 'Content-Type': 'application/octet-stream' }
+      });
+    });
+  }
+  return _origFetch(input, init);
+};
+
+(function() {
+  var _origXHROpen = XMLHttpRequest.prototype.open;
+  var _origXHRSend = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.open = function(method, url) {
+    this._vgbaUrl = url;
+    return _origXHROpen.apply(this, arguments);
+  };
+  XMLHttpRequest.prototype.send = function() {
+    var self = this;
+    var url = self._vgbaUrl || '';
+    if (url === DROPPED_KEY || url.endsWith('/' + DROPPED_KEY)) {
+      loadDroppedRom().then(function(buf) {
+        if (!buf) { return _origXHRSend.apply(self, arguments); }
+        Object.defineProperty(self, 'status', { get: function() { return 200; } });
+        Object.defineProperty(self, 'readyState', { get: function() { return 4; } });
+        Object.defineProperty(self, 'response', { get: function() { return buf; } });
+        Object.defineProperty(self, 'responseType', { get: function() { return 'arraybuffer'; } });
+        if (self.onload) self.onload();
+        if (self.onreadystatechange) self.onreadystatechange();
+      });
+      return;
+    }
+    return _origXHRSend.apply(self, arguments);
+  };
+})();
+
+const vgbacoolgames = [
+  { rom: "firered.gba",  name: "Pokémon FireRed Version" },
+  { rom: "emerald.gba",  name: "Pokémon Emerald Version" },
+  { rom: "zeldacap.gba", name: "The Legend of Zelda: The Minish Cap" },
+];
+
+  var selectorEl = document.getElementById('game-selector');
+  var statusEl   = document.getElementById('status');
+  var logEl      = document.getElementById('log');
+  var canvasWrap = document.getElementById('canvas-wrap');
+
+  var storedRom  = sessionStorage.getItem('gbaromurl');
+  var storedName = sessionStorage.getItem('gbaromname');
+  if (storedRom) {
+    window.gbaromurl = storedRom;
+    statusEl.textContent = 'Loading ' + (storedName || storedRom) + '...';
+  }
+
+  vgbacoolgames.forEach(function(game, i) {
+    var btn = document.createElement('button');
+    btn.textContent = game.name;
+    btn.addEventListener('click', function() {
+      sessionStorage.setItem('gbaromurl', game.rom);
+      sessionStorage.setItem('gbaromname', game.name);
+      location.reload();
+    });
+    if (storedRom === game.rom) btn.classList.add('active');
+    selectorEl.appendChild(btn);
+  });
+
+  canvasWrap.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    canvasWrap.classList.add('dragover');
+  });
+  canvasWrap.addEventListener('dragleave', function() {
+    canvasWrap.classList.remove('dragover');
+  });
+  canvasWrap.addEventListener('drop', function(e) {
+    e.preventDefault();
+    canvasWrap.classList.remove('dragover');
+    var file = e.dataTransfer.files[0];
+    if (!file) return;
+    statusEl.textContent = 'Reading ' + file.name + '...';
+    var reader = new FileReader();
+    reader.onload = function() {
+      storeDroppedRom(reader.result).then(function() {
+        sessionStorage.setItem('gbaromurl', DROPPED_KEY);
+        sessionStorage.setItem('gbaromname', file.name);
+        location.reload();
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  });
+
+  var Module = {
+    canvas: (function(){ return document.getElementById('canvas'); })(),
+    print:    function(t){ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; },
+    printErr: function(t){ logEl.textContent += t + "\n"; logEl.scrollTop = logEl.scrollHeight; },
+    setStatus:function(t){ statusEl.textContent = t; },
+  };
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>
