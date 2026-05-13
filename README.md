@@ -106,7 +106,7 @@ make web
 
 ## Usage
 
-Open `web/vba-emu.html` in a browser (via localhost server) , select a game from the menu or drag and drop your own `.gba` ROM file onto the canvas.
+Open `web/vgba-emu.html` in a browser (via localhost server) , select a game from the menu or drag and drop your own `.gba` ROM file onto the canvas.
 
 ## Development
 
