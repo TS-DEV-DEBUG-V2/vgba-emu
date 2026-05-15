@@ -1,4 +1,4 @@
-// legacy vgba-emu ppy
+// legacy vgba-emu ppu
 // the new and maintained rewrite is in /src/ppu
 // this is kept just because i want too
 
