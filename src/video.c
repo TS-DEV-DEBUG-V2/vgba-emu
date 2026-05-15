@@ -1,7 +1,7 @@
 // legacy vgba-emu ppu
 // the new and maintained rewrite is in /src/ppu
 // this is kept just because i want too
-
+// there isnt a build option to use this file, if you are that desperate just patch it yourself
 #include "arm.h"
 #include "arm_mem.h"
 #include "dma.h"
