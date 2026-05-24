@@ -1,6 +1,6 @@
 // vgba emulator 
 // a gba emulator
-// please, if u are gonna take my code credit memccpy
+// please, if u are gonna take my code credit me please 
 // LICENSE: Apache 2.0
 // this is arm.c (gba is an arm based device) 
 // this is the core of the emulator, the cpu
